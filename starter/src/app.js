@@ -1,8 +1,8 @@
 import { Loader } from '@googlemaps/js-api-loader'
+import MarkerClusterer from '@google/markerclustererplus'
 require('dotenv').config()
 
 const apiOptions = {
-
     apiKey: process.env.GOOGLEMAPS_API_KEY
 }
 
@@ -19,6 +19,7 @@ function displayMap() {
     return map
 }
 
+// adding markers to map
 function addMarkers(map) {
     const locations = {
         operaHouse: { lat: -33.8567844, lng: 151.213108 },
@@ -51,11 +52,47 @@ function addMarkers(map) {
     return markers
 }
 
+// clustering markers depending on zoom
+// they've set it up so that /m iterates depending on size of number of markers in a given area
+function clusterMarkers(map, markers) {
+    const clustererOptions = { imagePath: './img/m' }
+    const markerCluster = new MarkerClusterer(map, markers, clustererOptions)
+}
+function drawCircle(map, location) {
+    const circleOptions = {
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.8,
+        strokeWeight: 1,
+        map: map,
+        center: location,
+        radius: 800
+    }
+    const circle = new google.maps.Circle(circleOptions)
+    return circle
+}
+
+function addPanToMarker(map, markers) {
+    // have to initiate circle
+    let circle
+    markers.map(marker => {
+        marker.addListener('click', event => {
+            const location = { lat: event.latLng.lat(), lng: event.latLng.lng() }
+            map.panTo(location)
+            if (circle) {
+                circle.setMap(null)
+            }
+            circle = drawCircle(map, location)
+        })
+    })
+}
+
 
 loader.load().then( () => {
     console.log('Maps JS API loaded')
     const map = displayMap()
     const markers = addMarkers(map)
+    clusterMarkers(map, markers)
+    addPanToMarker(map, markers)
 } )
 
 
